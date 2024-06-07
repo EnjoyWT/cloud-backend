@@ -5,11 +5,11 @@ import * as dayjs from "dayjs";
 import * as multer from "multer";
 import { user } from "./models/mysql";
 import Logger from "./loaders/logger";
-import { queryTable } from "./utils/mysql";
+const { sequelize } = require("./models/mysql")
 const expressSwagger = require("express-swagger-generator")(app);
 expressSwagger(config.options);
 
-queryTable(user);
+// queryTable(user);
 
 import {
   login,
@@ -92,7 +92,7 @@ app.get("/get-async-routes", (req, res) => {
 
   res.json({
     success: true,
-    data: [],
+    data: [permissionRouter],
   });
 });
 
@@ -122,17 +122,27 @@ app.ws("/socket", function (ws, req) {
   });
 });
 
-app
-  .listen(config.port, () => {
-    Logger.info(`
-    ################################################
-    🛡️  Swagger文档地址: http://localhost:${config.port} 🛡️
-    ################################################
-  `);
+
+
+sequelize.sync()
+  .then(() => {
+    app
+    .listen(config.port, () => {
+      Logger.info(`
+      ################################################
+      🛡️  Swagger文档地址: http://localhost:${config.port} 🛡️
+      ################################################
+    `);
+    })
+    .on("error", (err) => {
+      Logger.error(err);
+      process.exit(1);
+    });
   })
-  .on("error", (err) => {
-    Logger.error(err);
-    process.exit(1);
+  .catch((error) => {
+    console.error('Unable to synchronize the database:', error);
   });
+
+
 
 // open(`http://localhost:${config.port}`); // 自动打开默认浏览器

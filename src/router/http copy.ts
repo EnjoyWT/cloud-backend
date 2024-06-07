@@ -12,10 +12,7 @@ import { createMathExpr } from "svg-captcha";
 
 const utils = require("@pureadmin/utils");
 
-const { models } = require("../models/mysql");
-
-import { Op } from 'sequelize';
-
+const { models } = require('../models');
 
 
 /** 保存验证码 */
@@ -63,26 +60,35 @@ let refreshExpiresIn = "2m"
  */
 
 const login = async (req: Request, res: Response) => {
- 
+  // const { username, password, verify } = req.body;
+  // if (generateVerify !== verify) return res.json({
+  //   success: false,
+  // data: {
+  //   message: Message[0];
+  // }
+  // })
   const { username, password } = req.body;
-
-  try {
-    // 检查是否有相同的 email 用户存在
-    const existingUser = await models.User.findOne({ where: { username: username } });
-
-    if (existingUser) {
+  let sql: string =
+    "select * from users where username=" + "'" + username + "'";
+  connection.query(sql, async function (err, data: any) {
+    if (data.length == 0) {
+      await res.json({
+        success: false,
+        data: { message: Message[1] },
+      });
+    } else {
       if (
-        createHash("md5").update(password).digest("hex") == existingUser.password
+        createHash("md5").update(password).digest("hex") == data[0].password
       ) {
         const accessToken = jwt.sign(
           {
-            accountId: existingUser.id,
+            accountId: data[0].id,
           },
           secret.jwtSecret,
           { expiresIn }
         );
 
-        const refreshToken = jwt.sign({ accountId: existingUser.id }, secret.jwtRefreshSecret, { expiresIn: refreshExpiresIn });
+        const refreshToken = jwt.sign({ accountId: data[0].id }, secret.jwtRefreshSecret, { expiresIn: refreshExpiresIn });
 
         if (username === "admin") {
           await res.json({
@@ -122,45 +128,34 @@ const login = async (req: Request, res: Response) => {
           data: { message: Message[3] },
         });
       }
-     
-    } else {
-      await res.json({
-        success: false,
-        data: { message: Message[1] },
-      });
     }
-  } catch (error) {
-    await res.json({
-      success: false,
-      data: { message: Message[12] },
-    });
-  }
+  });
 };
 
 
 const refreshToken = async (req: Request, res: Response) => {
   const { refreshToken } = req.body;
 
-  // if (!refreshToken) {
-  //     return res.status(400).send('缺少刷新令牌');
-  // }
+  if (!refreshToken) {
+      return res.status(400).send('缺少刷新令牌');
+  }
 
-  // // 验证刷新令牌
-  // try {
-  //     const payload = jwt.verify(refreshToken, secret.jwtRefreshSecret);
+  // 验证刷新令牌
+  try {
+      const payload = jwt.verify(refreshToken, secret.jwtRefreshSecret);
 
-  //     payload.
-  //     if (!user) {
-  //         return res.status(401).send('无效的刷新令牌');
-  //     }
+      payload.
+      if (!user) {
+          return res.status(401).send('无效的刷新令牌');
+      }
 
-  //     // 生成新的访问令牌
-  //     const accessToken = jwt.sign({ userId: user._id }, SECRET_KEY, { expiresIn: '15m' });
+      // 生成新的访问令牌
+      const accessToken = jwt.sign({ userId: user._id }, SECRET_KEY, { expiresIn: '15m' });
 
-  //     res.json({ accessToken });
-  // } catch (err) {
-  //     return res.status(401).send('刷新令牌无效或已过期');
-  // }
+      res.json({ accessToken });
+  } catch (err) {
+      return res.status(401).send('刷新令牌无效或已过期');
+  }
 }
 // /**
 //  * @typedef Register
@@ -189,51 +184,54 @@ const refreshToken = async (req: Request, res: Response) => {
  */
 
 const register = async (req: Request, res: Response) => {
+  // const { username, password, verify } = req.body;
   const { username, password } = req.body;
- 
-  if (password.length < 6){
+  // if (generateVerify !== verify)
+  //   return res.json({
+  //     success: false,
+  //     data: { message: Message[0] },
+  //   });
+  if (password.length < 6)
     return res.json({
       success: false,
       data: { message: Message[4] },
     });
-  }
-  
-    try {
-      const oldone = await models.User.findOne( { where:{username:username}})
-      console.log(oldone)
-      if(oldone){
-        await res.json({
-          success: false,
-          data: { message: Message[5] },
-        });
-      }else{
-        let time = await getFormatDate();
-        let passwordhash = createHash("md5").update(password).digest("hex")
-
-        const newUser = await models.User.create({
-          username,
-          password:passwordhash,
-          time:time
-        });
-        if(newUser){
+  let sql: string =
+    "select * from users where username=" + "'" + username + "'";
+  connection.query(sql, async (err, data: any) => {
+    if (data.length > 0) {
+      await res.json({
+        success: false,
+        data: { message: Message[5] },
+      });
+    } else {
+      let time = await getFormatDate();
+      let sql: string =
+        "insert into users (username,password,time) value(" +
+        "'" +
+        username +
+        "'" +
+        "," +
+        "'" +
+        createHash("md5").update(password).digest("hex") +
+        "'" +
+        "," +
+        "'" +
+        time +
+        "'" +
+        ")";
+      connection.query(sql, async function (err) {
+        if (err) {
+          Logger.error(err);
+        } else {
           await res.json({
             success: true,
             data: { message: Message[6] },
           });
-        }else{
-          return res.json({
-            success: false,
-            data: { message: "数据库异常" },
-          });
         }
-
-      }
-    } catch (error) {
-      return res.json({
-        success: false,
-        data: { message: error },
       });
     }
+  });
 };
 
 /**
@@ -263,7 +261,28 @@ const updateList = async (req: Request, res: Response) => {
   } catch (error) {
     return res.status(401).end();
   }
-
+  let modifySql: string = "UPDATE users SET username = ? WHERE id = ?";
+  let sql: string = "select * from users where id=" + id;
+  connection.query(sql, function (err, data) {
+    connection.query(sql, function (err) {
+      if (err) {
+        Logger.error(err);
+      } else {
+        let modifyParams: string[] = [username, id];
+        // 改
+        connection.query(modifySql, modifyParams, async function (err, result) {
+          if (err) {
+            Logger.error(err);
+          } else {
+            await res.json({
+              success: true,
+              data: { message: Message[7] },
+            });
+          }
+        });
+      }
+    });
+  });
 };
 
 /**
@@ -291,21 +310,17 @@ const deleteList = async (req: Request, res: Response) => {
   } catch (error) {
     return res.status(401).end();
   }
-
-  try {
-    const userToDelete = await models.User.findOne({ where: { id: id } });
-    if (userToDelete) {
-        await userToDelete.destroy();
-        await res.json({
-          success: true,
-          data: { message: Message[8] },
-        });
+  let sql: string = "DELETE FROM users where id=" + "'" + id + "'";
+  connection.query(sql, async function (err, data) {
+    if (err) {
+      console.log(err);
     } else {
-        console.log('User not found.');
+      await res.json({
+        success: true,
+        data: { message: Message[8] },
+      });
     }
-    } catch (error) {
-        console.error('Error deleting user:', error);
-    }
+  });
 };
 
 /**
@@ -338,19 +353,18 @@ const searchPage = async (req: Request, res: Response) => {
   } catch (error) {
     return res.status(401).end();
   }
-
-  try {
-    const users = await models.User.findAll({
-        limit: size,
-        offset: (page - 1) * size
-      });
+  let sql: string =
+    "select * from users limit " + size + " offset " + size * (page - 1);
+  connection.query(sql, async function (err, data) {
+    if (err) {
+      Logger.error(err);
+    } else {
       await res.json({
         success: true,
-        data:users,
+        data,
       });
-  } catch (error) {
-      console.error('Error fetching users:', error);
-  }
+    }
+  });
 };
 
 /**
@@ -387,19 +401,20 @@ const searchVague = async (req: Request, res: Response) => {
       success: false,
       data: { message: Message[9] },
     });
-  try {
-    const users = await models.User.findAll({
-        where: {
-            username: {
-                [Op.like]: `%${username}%`
-            }
-        }
+  let sql: string = "select * from users";
+  sql += " WHERE username LIKE " + mysql.escape("%" + username + "%");
+  connection.query(sql, function (err, data) {
+    connection.query(sql, async function (err) {
+      if (err) {
+        Logger.error(err);
+      } else {
+        await res.json({
+          success: true,
+          data,
+        });
+      }
     });
-        console.log('Users:', users);
-    } catch (error) {
-        console.error('Error fetching users:', error);
-    }
-
+  });
 };
 
 // express-swagger-generator中没有文件上传文档写法，所以请使用postman调试

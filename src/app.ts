@@ -1,6 +1,7 @@
 import * as express from "express";
 import * as expressWs from "express-ws";
 import * as bodyParser from "body-parser";
+import * as cors from "cors"; // 新增
 
 class App {
   public app;
@@ -21,15 +22,17 @@ class App {
     );
     // 设置静态访问目录(Swagger)
     this.app.use(express.static("public"));
+    this.app.use(cors()); // 新增
+
     // 设置跨域访问
-    this.app.all("*", (req, res, next) => {
-      res.header("Access-Control-Allow-Origin", "*");
-      res.header("Access-Control-Allow-Headers", "content-type, x-requested-with"); // 添加 x-requested-with 请求头
-      res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
-      res.header("X-Powered-By", " 3.2.1");
-      res.header("Content-Type", "application/json;charset=utf-8");
-      next();
-    });
+    // this.app.all("*", (req, res, next) => {
+    //   res.header("Access-Control-Allow-Origin", "*");
+    //   res.header("Access-Control-Allow-Headers", "content-type, x-requested-with"); // 添加 x-requested-with 请求头
+    //   res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
+    //   res.header("X-Powered-By", " 3.2.1");
+    //   res.header("Content-Type", "application/json;charset=utf-8");
+    //   next();
+    // });
   }
 }
 

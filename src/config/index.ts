@@ -11,6 +11,7 @@ export default {
   port: parseInt(process.env.PORT, 10),
   databaseURL: process.env.MONGODB_URI,
   jwtSecret: process.env.JWT_SECRET,
+  jwtRefreshSecret:process.env.JWT_REFRESH_SECRET,
   jwtAlgorithm: process.env.JWT_ALGO,
   options: {
     swaggerDefinition: {
@@ -52,8 +53,8 @@ export default {
   },
   mysql: {
     host: "localhost",
-    charset: "utf8_general_ci",
-    user: "root",
+    database:"user",
+    username: "root",
     password: "123456",
     port: 3316, 
   },
