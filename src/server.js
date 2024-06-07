@@ -1,18 +1,20 @@
-import app from "./app";
+const app = require("./app.js");
 // import * as open from "open";
-import config from "./config";
-import * as dayjs from "dayjs";
-import * as multer from "multer";
-import { user } from "./models/mysql";
-import Logger from "./loaders/logger";
+const config = require("./config");
+const dayjs = require("dayjs");
+const multer = require("multer");
+const { user } = require("./models/mysql");
+const Logger = require("./loaders/logger");
+
 const { sequelize } = require("./models/mysql")
 const expressSwagger = require("express-swagger-generator")(app);
 expressSwagger(config.options);
 
 // queryTable(user);
 
-import {
+const {
   login,
+  refreshToken,
   register,
   updateList,
   deleteList,
@@ -20,7 +22,8 @@ import {
   searchVague,
   upload,
   captcha,
-} from "./router/http";
+} = require("./router/http");
+
 
 app.post("/login", (req, res) => {
   login(req, res);
@@ -28,6 +31,9 @@ app.post("/login", (req, res) => {
 
 app.post("/register", (req, res) => {
   register(req, res);
+});
+app.post("/refresh-token", (req, res) => {
+  refreshToken(req, res);
 });
 
 app.put("/updateList/:id", (req, res) => {
@@ -45,6 +51,7 @@ app.post("/searchPage", (req, res) => {
 app.post("/searchVague", (req, res) => {
   searchVague(req, res);
 });
+
 
 // 新建存放临时文件的文件夹
 const upload_tmp = multer({ dest: "upload_tmp/" });

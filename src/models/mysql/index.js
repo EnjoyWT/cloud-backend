@@ -8,7 +8,7 @@
 
 const { Sequelize } = require('sequelize');
 const config = require("../../config/index")
-const mysql = config.default.mysql;
+const mysql = config.mysql;
 
 
 const sequelize = new Sequelize(mysql.database, mysql.username, mysql.password, {

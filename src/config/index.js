@@ -1,4 +1,4 @@
-import * as dotenv from "dotenv";
+const dotenv = require("dotenv");
 
 process.env.NODE_ENV = process.env.NODE_ENV || "development";
 
@@ -7,11 +7,11 @@ if (envFound.error) {
   throw new Error("⚠️  Couldn't find .env file  ⚠️");
 }
 
-export default {
+module.exports = {
   port: parseInt(process.env.PORT, 10),
   databaseURL: process.env.MONGODB_URI,
   jwtSecret: process.env.JWT_SECRET,
-  jwtRefreshSecret:process.env.JWT_REFRESH_SECRET,
+  jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
   jwtAlgorithm: process.env.JWT_ALGO,
   options: {
     swaggerDefinition: {
@@ -53,7 +53,7 @@ export default {
   },
   mysql: {
     host: "localhost",
-    database:"user",
+    database: "user",
     username: "root",
     password: "123456",
     port: 3316, 

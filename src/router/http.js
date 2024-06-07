@@ -1,29 +1,26 @@
-import * as fs from "fs";
-import secret from "../config";
-import * as mysql from "mysql2";
-import * as jwt from "jsonwebtoken";
-import { createHash } from "crypto";
-import Logger from "../loaders/logger";
-import { Message } from "../utils/enums";
-import getFormatDate from "../utils/date";
-import { connection } from "../utils/mysql";
-import { Request, Response } from "express";
-import { createMathExpr } from "svg-captcha";
+const fs = require("fs");
+const secret = require("../config");
+const mysql = require("mysql2");
+const jwt = require("jsonwebtoken");
+const { createHash } = require("crypto");
+const Logger = require("../loaders/logger");
+const { Message } = require("../utils/enums");
+const getFormatDate = require("../utils/date");
+const { Request, Response } = require("express");
+const { createMathExpr } = require("svg-captcha");
 
 const utils = require("@pureadmin/utils");
 
 const { models } = require("../models/mysql");
-
-import { Op } from 'sequelize';
-
+const { Op } = require("sequelize");
 
 
 /** 保存验证码 */
-let generateVerify: number;
+let generateVerify;
 
 /** 过期时间 单位：毫秒 默认 1分钟过期，方便演示 */
 let expiresIn = 60000;
-let refreshExpiresIn = "2m"
+let refreshExpiresIn = "2m";
 
 /**
  * @typedef Error
@@ -34,13 +31,6 @@ let refreshExpiresIn = "2m"
  * @typedef Response
  * @property {[integer]} code
  */
-
-// /**
-//  * @typedef Login
-//  * @property {string} username.required - 用户名 - eg: admin
-//  * @property {string} password.required - 密码 - eg: admin123
-//  * @property {integer} verify.required - 验证码
-//  */
 
 /**
  * @typedef Login
@@ -62,7 +52,7 @@ let refreshExpiresIn = "2m"
  * @security JWT
  */
 
-const login = async (req: Request, res: Response) => {
+const login = async (req, res) => {
  
   const { username, password } = req.body;
 
@@ -138,36 +128,33 @@ const login = async (req: Request, res: Response) => {
 };
 
 
-const refreshToken = async (req: Request, res: Response) => {
+const refreshToken = async (req, res) => {
   const { refreshToken } = req.body;
 
-  // if (!refreshToken) {
-  //     return res.status(400).send('缺少刷新令牌');
-  // }
+  if (!refreshToken) {
+      return res.status(400).send('缺少刷新令牌');
+  }
 
-  // // 验证刷新令牌
-  // try {
-  //     const payload = jwt.verify(refreshToken, secret.jwtRefreshSecret);
+  // 验证刷新令牌
+  try {
+      const payload = jwt.verify(refreshToken, secret.jwtRefreshSecret);
 
-  //     payload.
-  //     if (!user) {
-  //         return res.status(401).send('无效的刷新令牌');
-  //     }
+      const id =  payload.accountId
 
-  //     // 生成新的访问令牌
-  //     const accessToken = jwt.sign({ userId: user._id }, SECRET_KEY, { expiresIn: '15m' });
+      const old = await models.User.findByPk(id)
+      if (!old) {
+          return res.status(401).send('无效的刷新令牌');
+      }
 
-  //     res.json({ accessToken });
-  // } catch (err) {
-  //     return res.status(401).send('刷新令牌无效或已过期');
-  // }
+      const accessToken = jwt.sign({ accountId: id }, secret.jwtSecret, { expiresIn: refreshExpiresIn });
+
+      res.json({ accessToken:accessToken, refreshToken: refreshToken,expires:refreshExpiresIn});
+  } catch (err) {
+      console.log(err)
+      return res.status(401).send('刷新令牌无效或已过期');
+  }
 }
-// /**
-//  * @typedef Register
-//  * @property {string} username.required - 用户名
-//  * @property {string} password.required - 密码
-//  * @property {integer} verify.required - 验证码
-//  */
+
 /**
  * @typedef Register
  * @property {string} username.required - 用户名
@@ -188,7 +175,7 @@ const refreshToken = async (req: Request, res: Response) => {
  * @security JWT
  */
 
-const register = async (req: Request, res: Response) => {
+const register = async (req, res) => {
   const { username, password } = req.body;
  
   if (password.length < 6){
@@ -236,6 +223,7 @@ const register = async (req: Request, res: Response) => {
     }
 };
 
+
 /**
  * @typedef UpdateList
  * @property {string} username.required - 用户名 - eg: admin
@@ -252,12 +240,12 @@ const register = async (req: Request, res: Response) => {
  * @security JWT
  */
 
-const updateList = async (req: Request, res: Response) => {
+const updateList = async (req, res) => {
   const { id } = req.params;
   const { username } = req.body;
   let payload = null;
   try {
-    const authorizationHeader = req.get("Authorization") as string;
+    const authorizationHeader = req.get("Authorization");
     const accessToken = authorizationHeader.substr("Bearer ".length);
     payload = jwt.verify(accessToken, secret.jwtSecret);
   } catch (error) {
@@ -281,11 +269,11 @@ const updateList = async (req: Request, res: Response) => {
  * @security JWT
  */
 
-const deleteList = async (req: Request, res: Response) => {
+const deleteList = async (req, res) => {
   const { id } = req.params;
   let payload = null;
   try {
-    const authorizationHeader = req.get("Authorization") as string;
+    const authorizationHeader = req.get("Authorization");
     const accessToken = authorizationHeader.substr("Bearer ".length);
     payload = jwt.verify(accessToken, secret.jwtSecret);
   } catch (error) {
@@ -328,11 +316,11 @@ const deleteList = async (req: Request, res: Response) => {
  * @security JWT
  */
 
-const searchPage = async (req: Request, res: Response) => {
+const searchPage = async (req, res) => {
   const { page, size } = req.body;
   let payload = null;
   try {
-    const authorizationHeader = req.get("Authorization") as string;
+    const authorizationHeader = req.get("Authorization");
     const accessToken = authorizationHeader.substr("Bearer ".length);
     payload = jwt.verify(accessToken, secret.jwtSecret);
   } catch (error) {
@@ -372,11 +360,11 @@ const searchPage = async (req: Request, res: Response) => {
  * @security JWT
  */
 
-const searchVague = async (req: Request, res: Response) => {
+const searchVague = async (req, res) => {
   const { username } = req.body;
   let payload = null;
   try {
-    const authorizationHeader = req.get("Authorization") as string;
+    const authorizationHeader = req.get("Authorization");
     const accessToken = authorizationHeader.substr("Bearer ".length);
     payload = jwt.verify(accessToken, secret.jwtSecret);
   } catch (error) {
@@ -402,17 +390,17 @@ const searchVague = async (req: Request, res: Response) => {
 
 };
 
+
 // express-swagger-generator中没有文件上传文档写法，所以请使用postman调试
-const upload = async (req: Request, res: Response) => {
+const upload = async (req, res) => {
   // 文件存放地址
-  const des_file: any = (index: number) =>
-    "./public/files/" + req.files[index].originalname;
-  let filesLength = req.files.length as number;
+  const des_file = (index) => "./public/files/" + req.files[index].originalname;
+  let filesLength = req.files.length;
   let result = [];
 
   function asyncUpload() {
     return new Promise((resolve, rejects) => {
-      (req.files as Array<any>).forEach((ev, index) => {
+      req.files.forEach((ev, index) => {
         fs.readFile(req.files[index].path, function (err, data) {
           fs.writeFile(des_file(index), data, function (err) {
             if (err) {
@@ -461,7 +449,7 @@ const upload = async (req: Request, res: Response) => {
  * @returns {object} 200
  */
 
-const captcha = async (req: Request, res: Response) => {
+const captcha = async (req, res) => {
   const create = createMathExpr({
     mathMin: 1,
     mathMax: 4,
@@ -472,8 +460,9 @@ const captcha = async (req: Request, res: Response) => {
   res.json({ success: true, data: { text: create.text, svg: create.data } });
 };
 
-export {
+module.exports = {
   login,
+  refreshToken,
   register,
   updateList,
   deleteList,

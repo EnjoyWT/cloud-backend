@@ -1,15 +1,15 @@
-import * as express from "express";
-import * as expressWs from "express-ws";
-import * as bodyParser from "body-parser";
-import * as cors from "cors"; // 新增
+const express = require("express");
+const expressWs = require("express-ws");
+const bodyParser = require("body-parser");
+const cors = require("cors");
 
 class App {
-  public app;
   constructor() {
     this.app = express();
     this.config();
   }
-  private config(): void {
+
+  config() {
     // 支持websocket
     expressWs(this.app);
     // 支持json编码的主体
@@ -36,4 +36,4 @@ class App {
   }
 }
 
-export default new App().app;
+module.exports = new App().app;
