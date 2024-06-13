@@ -3,14 +3,13 @@ const app = require("./app.js");
 const config = require("./config");
 const dayjs = require("dayjs");
 const multer = require("multer");
-const { user } = require("./models/mysql");
 const Logger = require("./loaders/logger");
+const jwt = require("jsonwebtoken");
 
 const { sequelize } = require("./models/mysql")
 const expressSwagger = require("express-swagger-generator")(app);
 expressSwagger(config.options);
 
-// queryTable(user);
 
 const {
   login,
@@ -24,6 +23,24 @@ const {
   captcha,
 } = require("./router/http");
 
+const {bRegister,bUpdater,bDelete , bMine, bPage } = require("./router/business.js")
+
+
+// 创建一个中间件函数
+const authMiddleware = (req, res, next) => {
+  let payload = null;
+  try {
+    const authorizationHeader = req.get("Authorization");
+    const accessToken = authorizationHeader.substr("Bearer ".length);
+    payload = jwt.verify(accessToken, config.jwtSecret);
+    next()
+  } catch (error) {
+    return res.send({
+      success: false,
+      msg:'令牌无效或已过期'});
+  }
+
+};
 
 app.post("/login", (req, res) => {
   login(req, res);
@@ -64,7 +81,6 @@ app.get("/captcha", (req, res) => {
 });
 app.get("/get-async-routes", (req, res) => {
   
-  console.log(333)
   const permissionRouter = {
     path: "/permission",
     meta: {
@@ -131,6 +147,25 @@ app.ws("/socket", function (ws, req) {
 
 
 
+
+
+//商家
+app.post("/bRegister",authMiddleware, (req, res) => {
+  bRegister(req, res);
+});
+app.post("/bUpdater",authMiddleware, (req, res) => {
+  bUpdater(req, res);
+});
+app.post("/bDelete",authMiddleware, (req, res) => {
+  bDelete(req, res);
+});
+app.post("/bMine",authMiddleware, (req, res) => {
+  bMine(req, res);
+});
+app.post("/getUsers",authMiddleware, (req, res) => {
+  bPage(req, res);
+});
+
 sequelize.sync()
   .then(() => {
     app
@@ -150,6 +185,3 @@ sequelize.sync()
     console.error('Unable to synchronize the database:', error);
   });
 
-
-
-// open(`http://localhost:${config.port}`); // 自动打开默认浏览器

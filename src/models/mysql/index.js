@@ -26,6 +26,8 @@ const db = {
 
 // 加载模型
 db.models.User = require('./user')(sequelize, Sequelize);
+db.models.Order = require('./order')(sequelize, Sequelize);
+db.models.Room = require('./room')(sequelize, Sequelize);
 
 
 module.exports = db;

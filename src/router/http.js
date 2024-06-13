@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const { createHash } = require("crypto");
 const Logger = require("../loaders/logger");
 const { Message } = require("../utils/enums");
-const getFormatDate = require("../utils/date");
+const {getFormatDate} = require("../utils/date");
 const { Request, Response } = require("express");
 const { createMathExpr } = require("svg-captcha");
 
@@ -20,7 +20,7 @@ let generateVerify;
 
 /** 过期时间 单位：毫秒 默认 1分钟过期，方便演示 */
 let expiresIn = 60000;
-let refreshExpiresIn = "2m";
+let refreshExpiresIn = "1d";
 
 /**
  * @typedef Error
@@ -93,12 +93,13 @@ const login = async (req, res) => {
             success: true,
             data: {
               message: Message[2],
+              info:existingUser,
               username,
               // 这里模拟角色，根据自己需求修改
               roles: ["common"],
               accessToken,
               // 这里模拟刷新token，根据自己需求修改
-              refreshToken: "eyJhbGciOiJIUzUxMiJ9.adminRefresh",
+              refreshToken: refreshToken,
               expires: new Date(new Date()).getTime() + expiresIn,
               // 这个标识是真实后端返回的接口，只是为了演示
               pureAdminBackend:
@@ -132,7 +133,9 @@ const refreshToken = async (req, res) => {
   const { refreshToken } = req.body;
 
   if (!refreshToken) {
-      return res.status(400).send('缺少刷新令牌');
+      return res.send({
+        success: false,
+        msg:'缺少刷新令牌'});
   }
 
   // 验证刷新令牌
@@ -143,15 +146,21 @@ const refreshToken = async (req, res) => {
 
       const old = await models.User.findByPk(id)
       if (!old) {
-          return res.status(401).send('无效的刷新令牌');
+          return res.send({
+            success: false,
+            msg:'无效的刷新令牌'});
       }
 
       const accessToken = jwt.sign({ accountId: id }, secret.jwtSecret, { expiresIn: refreshExpiresIn });
 
-      res.json({ accessToken:accessToken, refreshToken: refreshToken,expires:refreshExpiresIn});
+      res.json({
+        success: true,
+        data:{ accessToken:accessToken, refreshToken: refreshToken,expires:refreshExpiresIn}
+      });
   } catch (err) {
-      console.log(err)
-      return res.status(401).send('刷新令牌无效或已过期');
+      return res.send({
+        success: false,
+        msg:'令牌无效或已过期'});
   }
 }
 
@@ -187,7 +196,6 @@ const register = async (req, res) => {
   
     try {
       const oldone = await models.User.findOne( { where:{username:username}})
-      console.log(oldone)
       if(oldone){
         await res.json({
           success: false,
@@ -200,7 +208,7 @@ const register = async (req, res) => {
         const newUser = await models.User.create({
           username,
           password:passwordhash,
-          time:time
+          roles:["admin"]
         });
         if(newUser){
           await res.json({
@@ -218,7 +226,7 @@ const register = async (req, res) => {
     } catch (error) {
       return res.json({
         success: false,
-        data: { message: error },
+        data: { message: JSON.stringify(error, null, 2) },
       });
     }
 };

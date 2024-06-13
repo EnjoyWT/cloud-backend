@@ -41,7 +41,7 @@ module.exports = {
     // app absolute path
     basedir: __dirname,
     // path to the API handle folder
-    files: ["../router/*.ts"],
+    files: ["../router/*.js"],
   },
   logs: {
     level: process.env.LOG_LEVEL || "silly",
