@@ -60,9 +60,12 @@ const login = async (req, res) => {
     // 检查是否有相同的 email 用户存在
     const existingUser = await models.User.findOne({ where: { username: username } });
 
+    console.log(password)
+    console.log(existingUser.password)
+
     if (existingUser) {
       if (
-        createHash("md5").update(password).digest("hex") == existingUser.password
+        password ==  existingUser.password
       ) {
         const accessToken = jwt.sign(
           {
@@ -203,11 +206,11 @@ const register = async (req, res) => {
         });
       }else{
         let time = await getFormatDate();
-        let passwordhash = createHash("md5").update(password).digest("hex")
+        // let passwordhash = createHash("md5").update(password).digest("hex")
 
         const newUser = await models.User.create({
           username,
-          password:passwordhash,
+          password,
           roles:["admin"]
         });
         if(newUser){

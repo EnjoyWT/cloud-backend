@@ -9,11 +9,19 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         allowNull: false,
       },
+      ordernum: { //订单编号
+        type: DataTypes.STRING, // 对应 varchar(32)
+        allowNull: false, // 如果需要非空约束，可加上这行
+      },
+      username: { //归属与哪个账号
+        type: DataTypes.STRING, // 对应 varchar(32)
+        allowNull: true, // 如果需要非空约束，可加上这行
+      },
       roomnum: { //房间编号
         type: DataTypes.STRING(32), // 对应 varchar(32)
         allowNull: true, // 如果需要非空约束，可加上这行
       },
-      name: { //订单名称
+      name: { //联系人名称
         type: DataTypes.STRING(32), // 对应 varchar(32)
         allowNull: true, // 如果需要非空约束，可加上这行
       },
@@ -40,8 +48,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING, // 对应 varchar(32)
         allowNull: true, // 如果需要非空约束，可加上这行
       },
-
-
 
     }, {
       freezeTableName: true, // 禁止 Sequelize 自动复数化表名

@@ -14,6 +14,10 @@ module.exports = (sequelize, DataTypes) => {
       roomnumber: { //房间编号
         type: DataTypes.STRING(32), // 对应 varchar(32)
         allowNull: true, // 如果需要非空约束，可加上这行
+      },
+      username: { //商家账号
+        type: DataTypes.STRING, // 对应 varchar(32)
+        allowNull: false, // 如果需要非空约束，可加上这行
       }
 
     }, {

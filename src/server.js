@@ -25,6 +25,9 @@ const {
 
 const {bRegister,bUpdater,bDelete , bMine, bPage } = require("./router/business.js")
 
+const {rAdd,rUpdater,rDelete , rPage } = require("./router/room.js")
+
+const {oAdd,oUpdater,oDelete , oPage } = require("./router/order.js")
 
 // 创建一个中间件函数
 const authMiddleware = (req, res, next) => {
@@ -82,37 +85,15 @@ app.get("/captcha", (req, res) => {
 app.get("/get-async-routes", (req, res) => {
   
   const permissionRouter = {
-    path: "/permission",
+    path: "/order/index",
     meta: {
-      title: "权限管理",
-      icon: "ep:lollipop",
-      rank: 10
-    },
-    children: [
-      {
-        path: "/permission/page/index",
-        name: "PermissionPage",
-        meta: {
-          title: "页面权限",
-          roles: ["admin", "common"]
-        }
-      },
-      {
-        path: "/permission/button/index",
-        name: "PermissionButton",
-        meta: {
-          title: "按钮权限",
-          roles: ["admin", "common"],
-          auths: [
-            "permission:btn:add",
-            "permission:btn:edit",
-            "permission:btn:delete"
-          ]
-        }
-      }
-    ]
-  };
+      title: "订单管理",
+      icon: "ri:list-check",
+      rank: 10,
+      roles: ["common"]
 
+    },
+  };
   res.json({
     success: true,
     data: [permissionRouter],
@@ -164,6 +145,37 @@ app.post("/bMine",authMiddleware, (req, res) => {
 });
 app.post("/getUsers",authMiddleware, (req, res) => {
   bPage(req, res);
+});
+
+
+
+//房间
+app.post("/rAdd",authMiddleware, (req, res) => {
+  rAdd(req, res);
+});
+app.post("/rUpdater",authMiddleware, (req, res) => {
+  rUpdater(req, res);
+});
+app.post("/rDelete",authMiddleware, (req, res) => {
+  rDelete(req, res);
+});
+
+app.post("/getRooms",authMiddleware, (req, res) => {
+  rPage(req, res);
+});
+
+app.post("/oAdd",authMiddleware, (req, res) => {
+  oAdd(req, res);
+});
+app.post("/oUpdater",authMiddleware, (req, res) => {
+  oUpdater(req, res);
+});
+app.post("/oDelete",authMiddleware, (req, res) => {
+  oDelete(req, res);
+});
+
+app.post("/getOrders",authMiddleware, (req, res) => {
+  oPage(req, res);
 });
 
 sequelize.sync()
