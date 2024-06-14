@@ -85,15 +85,25 @@ app.get("/captcha", (req, res) => {
 app.get("/get-async-routes", (req, res) => {
   
   const permissionRouter = {
-    path: "/order/index",
+    path: "/order",
     meta: {
       title: "订单管理",
       icon: "ri:list-check",
-      rank: 10,
-      roles: ["common"]
-
+      rank: 10
     },
+    redirect: "/order/index",
+    children: [
+      {
+        path: "/order/index",
+        name: "roomorder",
+        meta: {
+          title: "订单管理",
+          roles: ["common"]
+        }
+      }
+    ]
   };
+
   res.json({
     success: true,
     data: [permissionRouter],
