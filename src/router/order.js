@@ -79,18 +79,18 @@ const oAdd = async (req, res) => {
   const oUpdater = async (req, res) => {
 
 
-    const { username, roomnum ,ordernum ,phonenumber ,photos ,state = 0, totoalnum, info = ""} = req.body;
+    const { username, roomnum ,ordernum ,phonenumber ,photos ,state = 0, totoalnum, info = "",name} = req.body;
 
     
     if (!username) {
         return res.send({ success: false, msg: '关联的商户账号不能为空' });
     }
     if (!roomnum) {
-        return res.send({ success: false, msg: '关联的商户账号不能为空' });
+        return res.send({ success: false, msg: '关联的商户房间号账号不能为空' });
     }
 
     if (!ordernum) {
-        return res.send({ success: false, msg: '关联的商户账号不能为空' });
+        return res.send({ success: false, msg: '订单编号不能为空' });
     }
 
     // if (!location) {
@@ -106,12 +106,13 @@ const oAdd = async (req, res) => {
     // }
 
       try {
-        const oldone = await models.Order.findOne( { where:{name:name,username:username }})
+        const oldone = await models.Order.findOne( { where:{ordernum:ordernum}})
         
         if(oldone){
           const updatedUser = await oldone.update({
             roomnum,
             phonenumber,
+            name,
             photos,
             state,
             totoalnum,
@@ -125,6 +126,7 @@ const oAdd = async (req, res) => {
         }
         
       } catch (error) {
+        console.log(error)
         return res.json({
           success: false,
           data: { message: JSON.stringify(error, null, 2) },

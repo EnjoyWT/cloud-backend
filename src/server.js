@@ -29,6 +29,9 @@ const {rAdd,rUpdater,rDelete , rPage } = require("./router/room.js")
 
 const {oAdd,oUpdater,oDelete , oPage } = require("./router/order.js")
 
+const {miniGetAll, minilogin } = require("./router/miniOrder.js")
+
+
 // 创建一个中间件函数
 const authMiddleware = (req, res, next) => {
   let payload = null;
@@ -187,6 +190,15 @@ app.post("/oDelete",authMiddleware, (req, res) => {
 app.post("/getOrders",authMiddleware, (req, res) => {
   oPage(req, res);
 });
+
+app.get("/minilogin", (req, res) => {
+  minilogin(req, res);
+});
+
+app.post("/miniGetAll", (req, res) => {
+  miniGetAll(req, res);
+});
+
 
 sequelize.sync()
   .then(() => {
