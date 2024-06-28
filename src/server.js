@@ -30,6 +30,7 @@ const {rAdd,rUpdater,rDelete , rPage } = require("./router/room.js")
 const {oAdd,oUpdater,oDelete , oPage } = require("./router/order.js")
 
 const {miniGetAll, minilogin } = require("./router/miniOrder.js")
+const {pcGetOrder, pcUpdater } = require("./router/pcOrder.js")
 
 
 // 创建一个中间件函数
@@ -190,13 +191,21 @@ app.post("/oDelete",authMiddleware, (req, res) => {
 app.post("/getOrders",authMiddleware, (req, res) => {
   oPage(req, res);
 });
-
+//小程序
 app.get("/minilogin", (req, res) => {
   minilogin(req, res);
 });
 
 app.post("/miniGetAll", (req, res) => {
   miniGetAll(req, res);
+});
+
+//pc  
+app.post("/pc/fetchOrder", (req, res) => {
+  pcGetOrder(req, res);
+});
+app.post("/pc/updateOrder", (req, res) => {
+  pcUpdater(req, res);
 });
 
 
